@@ -26,6 +26,9 @@ jobs:
           server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
           settings-path: ${{ github.workspace }} # location for the settings.xml file
 
-      - name: Docker build & run
-        run: docker build -t cicd-example .
-            docker run -p 8080:8080 -d cicd-example
+      - name: Docker build
+        run: |
+          docker build -t cicdexample .
+          docker login -u ${{ secrets.USERNAME }} -p ${{ secrets.PASSWORD }}
+          docker tag cicd-example pangnem/cicd-example:${GITHUB_SHA::7}
+          docker push pangnem/cicd-example:${GITHUB_SHA::7}
