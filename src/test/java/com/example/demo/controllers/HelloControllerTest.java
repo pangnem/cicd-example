@@ -1,5 +1,3 @@
 package com.example.demo.controllers;
 
-public class HelloControllerTest {
-
-}
+public class HelloControllerTest {}
