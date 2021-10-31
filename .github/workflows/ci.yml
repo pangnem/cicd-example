@@ -1,29 +1,31 @@
 name: CI
 
-on: [push, pull_request]
+on: [ push, pull_request ]
 
 jobs:
-  formatting:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: axel-op/googlejavaformat-action@v3
-        with:
-          args: "--aosp --replace"
-
   build:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-java@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
         with:
-          distribution: 'temurin'
           java-version: '17'
+          distribution: 'adopt'
+          server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
+          settings-path: ${{ github.workspace }} # location for the settings.xml file
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-      - name: Deploy
+
+      - name: Docker build
+        run: |
+         sudo docker build -t cicd-example .
+         sudo docker login -u ${{ secrets.USERNAME }} -p ${{ secrets.PASSWORD }}
+         sudo docker tag cicd-example pangnem/cicd-example:${GITHUB_SHA::7}
+         sudo docker push pangnem/cicd-example:${GITHUB_SHA::7}
+
+      - name: Docker Deploy
         uses: appleboy/ssh-action@master
         with:
           host: 13.125.238.228
@@ -31,7 +33,7 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           envs: GITHUB_SHA
           script: |
-            docker pull pangnem/cicd-example:${GITHUB_SHA::7}
-            docker tag pangnem/cicd-example:${GITHUB_SHA::7} cicd-example
-            docker stop server
-            docker run -d --rm --name server -p 8080:8080 cicd-example
+            sudo docker pull pangnem/cicd-example:${GITHUB_SHA::7}
+            sudo docker tag pangnem/cicd-example:${GITHUB_SHA::7} cicd-example
+            sudo docker stop server
+            sudo docker run -d --rm --name server -p 8080:8080 cicd-example
