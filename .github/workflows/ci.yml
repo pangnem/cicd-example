@@ -1,6 +1,12 @@
 name: CI
 
-on: [ push, pull_request ]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
@@ -27,10 +33,10 @@ jobs:
 
       - name: Docker build
         run: |
-         sudo docker build -t cicd-example .
-         sudo docker login -u ${{ secrets.USERNAME }} -p ${{ secrets.PASSWORD }}
-         sudo docker tag cicd-example pangnem/cicd-example:${GITHUB_SHA::7}
-         sudo docker push pangnem/cicd-example:${GITHUB_SHA::7}
+          sudo docker build -t cicd-example .
+          sudo docker login -u ${{ secrets.USERNAME }} -p ${{ secrets.PASSWORD }}
+          sudo docker tag cicd-example pangnem/cicd-example:${GITHUB_SHA::7}
+          sudo docker push pangnem/cicd-example:${GITHUB_SHA::7}
 
       - name: Docker Deploy
         uses: appleboy/ssh-action@master
