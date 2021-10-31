@@ -25,3 +25,15 @@ jobs:
         run: chmod +x gradlew
       - name: Spring Test
         run: ./gradlew test jacocoTestCoverageVerification
+      - name: Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: 13.125.238.228
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_KEY }}
+          envs: GITHUB_SHA
+          script: |
+            docker pull pangnem/cicd-example:${GITHUB_SHA::7}
+            docker tag pangnem/cicd-example:${GITHUB_SHA::7} cicd-example
+            docker stop server
+            docker run -d --rm --name server -p 8080:8080 cicd-example
