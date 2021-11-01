@@ -31,12 +31,17 @@ jobs:
       - name: Gradle Test
         run: ./gradlew test
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+
       - name: Docker build
         run: |
-          sudo docker build -t cicd-example .
-          sudo docker login -u ${{ secrets.USERNAME }} -p ${{ secrets.PASSWORD }}
-          sudo docker tag cicd-example pangnem/cicd-example:${GITHUB_SHA::7}
-          sudo docker push pangnem/cicd-example:${GITHUB_SHA::7}
+          docker build -t cicd-example .
+          docker tag cicd-example pangnem/cicd-example:${GITHUB_SHA::7}
+          docker push pangnem/cicd-example:${GITHUB_SHA::7}
 
       - name: Docker Deploy
         uses: appleboy/ssh-action@master
@@ -46,7 +51,7 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           envs: GITHUB_SHA
           script: |
-            sudo docker pull pangnem/cicd-example:${GITHUB_SHA::7}
-            sudo docker tag pangnem/cicd-example:${GITHUB_SHA::7} cicd-example
-            sudo docker stop server
-            sudo docker run -d --rm --name server -p 8080:8080 cicd-example
+            docker pull pangnem/cicd-example:${GITHUB_SHA::7}
+            docker tag pangnem/cicd-example:${GITHUB_SHA::7} cicd-example
+            docker stop server
+            docker run -d --rm --name server -p 8080:8080 cicd-example
